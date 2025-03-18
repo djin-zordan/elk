@@ -2,7 +2,6 @@
   "name": "@elk-zone/elk",
   "type": "module",
   "version": "0.16.0",
-  "packageManager": "pnpm@9.15.9+sha512.68046141893c66fad01c079231128e9afb89ef87e2691d69e4d40eee228988295fd4682181bae55b58418c3a253bde65a505ec7c5f9403ece5cc3cd37dcf2531",
   "license": "MIT",
   "homepage": "https://elk.zone/",
   "main": "./nuxt.config.ts",
@@ -146,11 +145,6 @@
     "vitest": "3.0.8",
     "vue-tsc": "^2.1.6"
   },
-  "pnpm": {
-    "patchedDependencies": {
-      "pinceau": "patches/pinceau.patch"
-    }
-  },
   "resolutions": {
     "nuxt-component-meta": "0.10.0",
     "unstorage": "^1.15.0",
@@ -158,7 +152,7 @@
     "vue": "^3.5.4"
   },
   "simple-git-hooks": {
-    "pre-commit": "pnpm lint-staged"
+    "pre-commit": "npx lint-staged"
   },
   "lint-staged": {
     "*": "eslint --fix"

@@ -5,33 +5,37 @@ WORKDIR /elk
 
 FROM base AS builder
 
-# Prepare pnpm https://pnpm.io/installation#using-corepack
-# workaround for npm registry key change
-# ref. `pnpm@10.1.0` / `pnpm@9.15.4` cannot be installed due to key id mismatch · Issue #612 · nodejs/corepack
-# - https://github.com/nodejs/corepack/issues/612#issuecomment-2629496091
+# Install corepack and Bun
 RUN npm i -g corepack@latest && corepack enable
+RUN npm i -g bun@latest
 
-# Prepare deps
-RUN apk update
-RUN apk add git --no-cache
+# Install dependencies
+RUN apk update && apk add git --no-cache
 
-# Prepare build deps ( ignore postinstall scripts for now )
+# Copy package files first
 COPY package.json ./
-COPY .npmrc ./
-COPY pnpm-lock.yaml ./
+COPY bun.lock ./
 COPY patches ./patches
-RUN pnpm i --frozen-lockfile --ignore-scripts
+
+# Install dependencies (ignore postinstall scripts)
+RUN bun install --frozen-lockfile --ignore-scripts
 
 # Copy all source files
 COPY . ./
 
-# Run full install with every postinstall script ( This needs project file )
-RUN pnpm i --frozen-lockfile
+# Run full install with postinstall scripts
+RUN bun install --frozen-lockfile
 
-# Build
-RUN pnpm build
+# Ensure the output directory exists
+RUN mkdir -p .output
+
+# Build the project
+RUN bun run build
 
 FROM base AS runner
+
+# Ensure Bun is installed in the runtime container
+RUN npm i -g bun@latest  
 
 ARG UID=911
 ARG GID=911
@@ -45,16 +49,18 @@ USER elk
 
 ENV NODE_ENV=production
 
+# Copy build output
 COPY --from=builder /elk/.output ./.output
 
+# Expose the application port
 EXPOSE 5314/tcp
 
+# Set the runtime environment variables
 ENV PORT=5314
-
-# Specify container only environment variables ( can be overwritten by runtime env )
 ENV NUXT_STORAGE_FS_BASE='/elk/data'
 
-# Persistent storage data
+# Define persistent storage volume
 VOLUME [ "/elk/data" ]
 
-CMD ["node", ".output/server/index.mjs"]
+# Run the Bun application
+CMD ["bun", ".output/server/index.mjs"]

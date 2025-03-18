@@ -327,7 +327,7 @@ export default defineNuxtConfig({
   },
   pwa,
   staleDep: {
-    packageManager: 'pnpm',
+    packageManager: 'bun',
   },
   unlazy: {
     ssr: false,
